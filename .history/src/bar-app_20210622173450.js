@@ -1,0 +1,287 @@
+import React, { useEffect, useState, useContext } from "react";
+import {
+  InputBase,
+  Toolbar,
+  CssBaseline,
+  AppBar,
+  Paper,
+  Grid,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+} from "@material-ui/core";
+import { makeStyles, fade } from "@material-ui/core/styles";
+import faker from "faker";
+
+import useOrderSubscription from "./hooks/useOrderSubscription";
+import { COLORS, ORDER_STATUS } from "./libs/constants";
+import { mock_orders } from "./mocks/orders";
+import _ from "lodash";
+import { _getAllOrdersByStatus } from "./graphql_operations/queries";
+import { Context } from "./context/contextActions";
+import { ContactsOutlined } from "@material-ui/icons";
+
+const useStyles = makeStyles((theme) => ({
+  search: {
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: fade(theme.palette.common.white, 1),
+    "&:hover": {
+      backgroundColor: fade(theme.palette.common.white, 1),
+    },
+    marginLeft: "auto",
+    marginRight: "auto",
+    width: "auto",
+  },
+  appBar: {
+    [theme.breakpoints.up("sm")]: {
+      width: `100%`,
+    },
+    backgroundColor: COLORS.white,
+    color: COLORS.black,
+  },
+  grid: {
+    marginTop: 100,
+    backgroundColor: COLORS.white,
+  },
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(1),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+  inputRoot: {
+    color: "inherit",
+  },
+  inputInput: {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
+    transition: theme.transitions.create("width"),
+    width: "100%",
+    [theme.breakpoints.up("md")]: {
+      width: "20ch",
+    },
+  },
+}));
+
+function GridCell({ table, index }) {
+  const classes = useStyles();
+  const [time, setTimer] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer({
+        inline: new Date(Date.now() - time.inline).toISOString().substr(14, 5),
+        choosing: new Date(Date.now() - time.choosing).toISOString().substr(14, 5),
+        inprogress: new Date(Date.now() - time.inprogress).toISOString().substr(14, 5),
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  console.log("sss");
+
+  return (
+    <Grid item>
+      <Paper
+        className={classes.paper}
+        style={{
+          overflow: "auto",
+          border: `0.5px solid ${COLORS.redLight}`,
+        }}
+      >
+        <Typography variant="body1" style={{ fontWeight: "bold" }}>
+          {} - {time}
+        </Typography>
+        <List dense={true}>
+          {[1, 2, 3, 4, 5, 6, 7].map((item) => {
+            return (
+              <ListItem>
+                <ListItemText primary="Item Name" />
+                <ListItemText style={{ textAlign: "end" }} primary={item} />
+              </ListItem>
+            );
+          })}
+        </List>
+      </Paper>
+    </Grid>
+  );
+}
+
+let dbOrders = [];
+
+export default function BarApp() {
+  const subscribeEvent = useOrderSubscription();
+  const { state } = useContext(Context);
+  const classes = useStyles();
+  const [fetchedOrders, setFetchedOrders] = useState([]);
+  const [unarrangedOrders, setUnarrangedOrders] = useState({
+    choosing: [],
+    inline: [],
+    inprogress: [],
+  });
+  const [arrangedOrders, setArrangedOrders] = useState({
+    choosing: [],
+    inline: [],
+    inprogress: [],
+  });
+
+  useEffect(() => {
+    dbOrders = [];
+    getAllOrdersByStatus({ eventId: state.event.id, status: ORDER_STATUS.INLINE });
+    getAllOrdersByStatus({ eventId: state.event.id, status: ORDER_STATUS.CHOOSING });
+    getAllOrdersByStatus({ eventId: state.event.id, status: ORDER_STATUS.IN_PROGRESS });
+    return () => {
+      console.log("cleanup");
+    };
+  }, [subscribeEvent]);
+
+  useEffect(() => {
+    console.log(unarrangedOrders);
+    sortOrders();
+  }, [unarrangedOrders]);
+
+  async function getAllOrdersByStatus({ nT, eventId, status }) {
+    let nextToken = nT;
+
+    let params = nextToken ? { eventId, nextToken, status } : { eventId, status };
+    try {
+      let { orders: newFetchedOrders, nextToken: next } = await _getAllOrdersByStatus(params);
+
+      if (newFetchedOrders) dbOrders = dbOrders.concat(newFetchedOrders);
+
+      if (next) {
+        await getAllOrdersByStatus({ nT: nextToken, eventId, status });
+      } else {
+        switch (status) {
+          case ORDER_STATUS.CHOOSING:
+            setUnarrangedOrders({ ...unarrangedOrders, choosing: dbOrders });
+            break;
+          case ORDER_STATUS.INLINE:
+            setUnarrangedOrders({ ...unarrangedOrders, inline: dbOrders });
+            break;
+          case ORDER_STATUS.IN_PROGRESS:
+            setUnarrangedOrders({ ...unarrangedOrders, inprogress: dbOrders });
+            break;
+          default:
+            break;
+        }
+        return;
+      }
+
+      nextToken = next;
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+  }
+
+  function sortOrders() {}
+
+  return (
+    <div className={classes.root}>
+      <CssBaseline />
+      <AppBar position="fixed" className={classes.appBar}>
+        <Toolbar>
+          <div className={classes.search}>
+            <InputBase
+              placeholder="table name..."
+              onChange={(e) => {
+                console.log("search", e.target.value);
+              }}
+              classes={{
+                root: classes.inputRoot,
+                input: classes.inputInput,
+              }}
+              inputProps={{ "aria-label": "search" }}
+            />
+          </div>
+        </Toolbar>
+      </AppBar>
+      <Grid
+        container
+        spacing={1}
+        className={classes.grid}
+        direction="column"
+        item
+        justify="space-around"
+        alignItems="center"
+        xs={12}
+      >
+        <Grid
+          direction="row"
+          container
+          item
+          justify="space-around"
+          alignItems="center"
+          xs={12}
+          spacing={3}
+          style={{ marginLeft: "auto", marginRight: "auto" }}
+        >
+          <Grid item xs={4}>
+            <Paper
+              className={classes.paper}
+              style={{ background: `linear-gradient(45deg, ${COLORS.redLight} 30%, ${COLORS.redLight} 90%)` }}
+            >
+              <Typography variant="h5" gutterBottom>
+                INLINE
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={4}>
+            <Paper
+              className={classes.paper}
+              style={{ background: `linear-gradient(45deg, ${COLORS.yellowLight} 30%, ${COLORS.yellowLight} 90%)` }}
+            >
+              <Typography variant="h5" gutterBottom>
+                CHOOSING
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={4}>
+            <Paper
+              className={classes.paper}
+              style={{ background: `linear-gradient(45deg, ${COLORS.greenLight} 30%, ${COLORS.greenLight} 90%)` }}
+            >
+              <Typography variant="h5" gutterBottom>
+                IN PROGRESS
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+        <Grid
+          direction="row"
+          container
+          item
+          xs={12}
+          spacing={2}
+          justify="space-around"
+          alignItems="center"
+          style={{ marginLeft: "auto", marginRight: "auto" }}
+        >
+          <Grid item xs={4} spacing={1} container direction="column">
+            {arrangedOrders.choosing.map((o) => {
+              return <GridCell />;
+            })}
+          </Grid>
+          <Grid item xs={4} spacing={1} container direction="column">
+            {arrangedOrders.inline.map((o) => {
+              return <GridCell />;
+            })}
+          </Grid>
+          <Grid item xs={4} spacing={1} container direction="column">
+            {arrangedOrders.inprogress.map((o) => {
+              return <GridCell />;
+            })}
+          </Grid>
+        </Grid>
+      </Grid>
+    </div>
+  );
+}

@@ -1,0 +1,49 @@
+/* * {
+  background-color: #ecebe7;
+  color: #282c34;
+} */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Arsenal", sans-serif;
+
+  /** background image */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-color: #ecebe7;
+  background-size: 35%;
+  background-repeat: no-repeat;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #ecebe7;
+}
+
+::-webkit-scrollbar {
+  width: 1px;
+  background-color: #ecebe7;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #000000;
+  border: 0px solid #000000;
+}
+
+.numeric-input {
+  background-color: transparent;
+  color: black;
+  width: 90px;
+  height: 35px;
+  border: 1px solid #000000;
+  border-radius: 0px;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}

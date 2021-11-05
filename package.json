@@ -1,0 +1,58 @@
+{
+  "name": "guest-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.11.4",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.58",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "amazon-cognito-identity-js": "^5.0.3",
+    "aws-amplify": "^4.1.0",
+    "aws-appsync": "^4.0.3",
+    "aws-appsync-react": "^4.0.3",
+    "aws-sdk": "^2.929.0",
+    "d3": "^6.7.0",
+    "faker": "^5.5.3",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "react": "^17.0.2",
+    "react-browser-hooks": "^2.2.4",
+    "react-chrono": "^1.10.0",
+    "react-dom": "^17.0.2",
+    "react-material-ui-carousel": "^2.2.6",
+    "react-responsive-carousel": "^3.2.18",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.3",
+    "react-virtualized-auto-sizer": "^1.0.5",
+    "react-window": "^1.8.6",
+    "ulid": "^2.3.0",
+    "web-vitals": "^1.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

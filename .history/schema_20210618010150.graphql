@@ -1,0 +1,278 @@
+﻿schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+# ENUMS
+enum EntityType {
+  USER
+  EVENT
+  ORDER
+  PHOTO
+  PRODUCT
+  SCHEDULE
+  TABLE
+}
+
+enum OrderStatus {
+  INLINE
+  IN_PROGRESS
+  CHOOSING
+  COMPLETED
+  CANCELLED
+}
+
+interface ICommonAttributes {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+}
+
+type Event implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+  name: String
+  location: String
+  code: String
+  dateOfEvent: AWSDateTime
+}
+
+type Order implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+  status: OrderStatus
+  fulfilledAt: AWSDateTime
+}
+
+type Photo implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID!
+  created: AWSDateTime!
+  modified: AWSDateTime!
+  entityType: EntityType!
+  link: String!
+}
+
+type Product implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+  category: String
+  name: String
+  quantity: Int
+}
+
+type Schedule implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID!
+  created: AWSDateTime!
+  modified: AWSDateTime!
+  entityType: EntityType!
+  name: String!
+  contents: AWSJSON!
+}
+
+type Table implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+  name: String
+  message: String
+  status: OrderStatus
+  priority: Int
+}
+
+type User implements ICommonAttributes @aws_cognito_user_pools @aws_iam {
+  id: ID
+  created: AWSDateTime
+  modified: AWSDateTime
+  entityType: EntityType
+  firstName: String
+  lastName: String
+  middleName: String
+}
+
+type UserData @aws_cognito_user_pools @aws_iam {
+  user: User!
+  table: Table!
+}
+
+type UserList @aws_cognito_user_pools @aws_iam {
+  users: [UserData!]
+  nextToken: String
+}
+
+type TableData @aws_cognito_user_pools @aws_iam {
+  table: Table!
+  users: [User!]
+}
+
+type TableList @aws_cognito_user_pools @aws_iam {
+  tables: [TableData!]
+  nextToken: String
+}
+
+type OrderProduct @aws_cognito_user_pools @aws_iam {
+  product: Product
+  quantity: Int!
+}
+
+type OrderOutput @aws_cognito_user_pools @aws_iam {
+  order: Order
+  table: Table
+  user: User
+  products: [OrderProduct]
+}
+
+type OrderList @aws_cognito_user_pools @aws_iam {
+  orders: [OrderOutput!]
+  nextToken: String
+}
+
+type ProductList @aws_cognito_user_pools @aws_iam {
+  products: [Product!]
+  nextToken: String
+}
+
+type WriteResult @aws_cognito_user_pools @aws_iam {
+  success: Boolean
+  id: ID
+}
+
+type TableUsers @aws_cognito_user_pools @aws_iam {
+  table: Table!
+  users: [User!]
+}
+
+input createUserInput {
+  firstName: String!
+  lastName: String
+  middleName: String
+  tableId: ID!
+}
+
+input updateUserInput {
+  id: ID!
+  firstName: String
+  lastName: String
+  middleName: String
+  tableId: ID
+}
+
+input createEventInput {
+  name: String!
+  location: String!
+  code: String!
+  dateOfEvent: AWSDateTime!
+}
+input createProductInput {
+  category: String!
+  name: String!
+  quantity: Int!
+  eventId: ID!
+}
+
+input updateProductInput {
+  category: String
+  name: String
+  quantity: Int
+  eventId: ID!
+  id: ID!
+}
+
+input updateEventInput {
+  id: ID!
+  name: String
+  location: String
+  code: String
+  dateOfEvent: AWSDateTime
+}
+
+input createTableInput {
+  name: String!
+  message: String!
+  priority: Int!
+  eventId: ID!
+}
+
+input updateTableInput {
+  id: ID!
+  eventId: ID!
+  name: String
+  message: String
+  status: OrderStatus
+  priority: Int
+}
+
+input orderProductInput {
+  productId: ID!
+  quantity: Int!
+}
+
+input createOrderInput {
+  products: [orderProductInput!]!
+  userId: ID!
+  tableId: ID!
+  eventId: ID!
+}
+
+input updateOrderInput {
+  id: ID!
+  eventId: ID!
+  tableId: ID!
+  status: OrderStatus
+  fulfilledAt: AWSDateTime
+  products: [orderProductInput!]
+}
+
+type NotifyOrderOutput {
+  order: OrderOutput
+  orderId: ID!
+}
+
+#MUTATIONS
+type Mutation {
+  createUser(input: createUserInput!): User @aws_cognito_user_pools @aws_iam # Tested
+  updateUser(input: updateUserInput!): User @aws_cognito_user_pools @aws_iam # Tested
+  createEvent(input: createEventInput): Event @aws_cognito_user_pools @aws_iam # Tested
+  updateEvent(input: updateEventInput): Event @aws_cognito_user_pools @aws_iam # Tested
+  deleteEvent(id: ID!): WriteResult @aws_cognito_user_pools @aws_iam # Tested
+  createTable(input: createTableInput!): Table @aws_cognito_user_pools @aws_iam # Tested
+  updateTable(input: updateTableInput!): Table @aws_cognito_user_pools @aws_iam # Tested
+  createProduct(input: createProductInput!): Product @aws_cognito_user_pools @aws_iam # Tested
+  updateProduct(input: updateProductInput!): Product @aws_cognito_user_pools @aws_iam # Tested
+  createOrder(input: createOrderInput!): OrderOutput @aws_cognito_user_pools @aws_iam # Tested
+  updateOrder(input: updateOrderInput): OrderOutput @aws_cognito_user_pools @aws_iam # Tested
+  notifyOrderUpdate(orderId: ID!): NotifyOrderOutput @aws_cognito_user_pools @aws_iam
+}
+
+#QUERIES
+type Query {
+  getUser(id: ID!): User! @aws_cognito_user_pools @aws_iam # Tested
+  getAllUsersAtEvent(nextToken: String, eventId: ID!): UserList! @aws_cognito_user_pools @aws_iam # Tested
+  getUsersOnTable(id: ID!): TableUsers
+  getEvent(id: ID!): Event @aws_cognito_user_pools @aws_iam # Tested
+  getEventByCode(code: String!): Event @aws_cognito_user_pools @aws_iam # Tested
+  getTable(id: ID!): Table @aws_cognito_user_pools @aws_iam # Tested
+  getAllTables(nextToken: String, eventId: ID!): TableList! @aws_cognito_user_pools @aws_iam # Tested
+  getProduct(id: ID!): Product! @aws_cognito_user_pools @aws_iam # Tested
+  getAllProducts(eventId: ID!): ProductList! @aws_cognito_user_pools @aws_iam # Tested
+  getProductCategories(eventId: ID!): [String!] @aws_cognito_user_pools @aws_iam # Tested
+  getOrder(id: ID!): OrderOutput @aws_cognito_user_pools @aws_iam # Tested
+  getOrdersByStatus(eventId: ID!, nextToken: String, status: OrderStatus!): OrderList @aws_cognito_user_pools @aws_iam # Tested
+  getOrdersByUser(id: ID!, eventId: ID!): OrderList @aws_cognito_user_pools @aws_iam # Tested
+}
+
+type Subscription {
+  onUpdateOrder: OrderOutput @aws_subscribe(mutations: ["updateOrder", "createOrder"]) @aws_cognito_user_pools @aws_iam
+  onUpdateSpecificOrder(orderId: ID!): NotifyOrderOutput
+    @aws_subscribe(mutations: ["notifyOrderUpdate"])
+    @aws_cognito_user_pools
+    @aws_iam
+}
