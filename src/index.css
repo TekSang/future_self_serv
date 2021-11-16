@@ -46,3 +46,17 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+/* added for menu */
+.menu-item {
+  /* display: grid; */
+  gap: 1rem 2rem;
+  max-width: 25rem;
+}
+
+article
+{
+  border-style: solid;
+  border-radius: 10px;
+  border: 1px solid grey;
+  margin: 1em;
+}
